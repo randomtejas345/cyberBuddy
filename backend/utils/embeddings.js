@@ -2,6 +2,6 @@
 import { OllamaEmbeddings } from "@langchain/ollama";
 
 export const embeddings = new OllamaEmbeddings({
-  model: "mxbai-embed-large", // ensure this model is pulled in Ollama
+  model: "mxbai-embed-large", 
   baseUrl: "http://localhost:11434",
 });
