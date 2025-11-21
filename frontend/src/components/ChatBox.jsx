@@ -17,25 +17,15 @@ export default function ChatBox() {
   };
 
   return (
-    <div className="p-4">
-      <div className="border rounded p-2 h-96 overflow-y-auto">
-        {messages.map((m, i) => (
-          <div key={i} className={m.role === "user" ? "text-blue-500" : "text-green-600"}>
-            <b>{m.role}:</b> {m.text}
-          </div>
-        ))}
+    <header className="header-compact glass neon-border">
+      <div className="brand">
+        <div className="logo">CB</div>
+        <div>
+          <div className="neon-text">cyberBuddy</div>
+          <div className="meta">Omnitrix · Ultimate ChatGPT</div>
+        </div>
       </div>
-      <div className="mt-2 flex">
-        <input
-          className="border flex-1 p-2"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask something about OWASP..."
-        />
-        <button className="bg-blue-600 text-white px-4 ml-2" onClick={handleSend}>
-          Send
-        </button>
-      </div>
-    </div>
+      <div className="meta">Status: <span style={{color:'var(--accent-1)', fontWeight:700}}>Online</span></div>
+    </header>
   );
 }

@@ -1,3 +1,17 @@
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -18,20 +32,7 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
 
 .card {
   padding: 2em;
@@ -39,4 +40,40 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.app-wrapper{
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding-top:24px;
+  padding-bottom:24px;
+  gap:12px;
+}
+.header-compact{
+  width:100%;
+  max-width:980px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 20px;
+  margin:0 auto 6px;
+}
+.brand {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.brand .logo {
+  width:46px;
+  height:46px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+  color:#02120b;
+  background: linear-gradient(135deg,var(--accent-1),var(--accent-2));
+  box-shadow: 0 8px 40px rgba(0,179,255,0.06), inset 0 -4px 12px rgba(0,0,0,0.15);
 }
