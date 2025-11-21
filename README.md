@@ -2,6 +2,9 @@
 
 A minimal ChatGPT-like interface built with Node + Express that is specialized on a small, project-specific dataset. It uses Ollama as the local LLM backend, ChromaDB as the vector database, and LangChain (JavaScript) to wire retrieval + generation together.
 
+<img width="1910" height="904" alt="image" src="https://github.com/user-attachments/assets/4823b5d3-7ca9-43bb-b586-f43ad5c92990" />
+
+
 Purpose
 - Provide a lightweight, local-first assistant tuned to a narrow dataset.
 - Combine embedding-based retrieval (ChromaDB) with an LLM (Ollama) via LangChain.
