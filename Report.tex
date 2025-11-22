@@ -1,0 +1,201 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{amsmath}
+
+\begin{document}
+
+\title{CyberSecBot: A LangChain-Powered OWASP Training Chatbot}
+
+\author{
+\IEEEauthorblockN{Nishant Patil, Tejas Wagh}
+\IEEEauthorblockA{
+Department of Computer Science and Engineering\\
+Indian Institute of Technology Ropar\\
+Emails: 2022csb1097@iitrpr.ac.in, 2022csb1144@iitrpr.ac.in
+}
+}
+
+
+\maketitle
+
+\begin{abstract}
+CyberSecBot is an intelligent conversational assistant designed to support cybersecurity learning and OWASP-based vulnerability training. It leverages modern LLM (Large Language Model) architectures through Ollama’s local Llama3:8B model, enhanced with LangChain for memory management and document retrieval. ChromaDB serves as a vector store for semantic search, while a Node.js + Express backend provides APIs to a React-based frontend. The system offers context-aware responses to cybersecurity queries and enables future extensions such as file uploads and interactive challenge guidance.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Chatbot, LangChain, Llama3, Ollama, ChromaDB, OWASP, Cybersecurity Training, RAG (Retrieval-Augmented Generation)
+\end{IEEEkeywords}
+
+\section{Introduction}
+Cybersecurity training is a critical aspect of modern digital literacy. However, learners often face difficulties navigating large sets of security guidelines and practical challenges. The \textbf{CyberSecBot} project aims to simplify cybersecurity learning using a domain-specific conversational agent.
+
+This system provides a chatbot capable of understanding cybersecurity-related queries and answering them contextually using curated OWASP documentation. The chatbot runs locally, ensuring data privacy and customizability.
+
+\section{System Architecture}
+The proposed \textbf{CyberSecBot} architecture follows a modular design to ensure scalability,
+adaptability, and maintainability. It integrates a React-based frontend, an Express.js backend,
+LangChain for intelligent query processing, ChromaDB for vector storage, and Ollama for local
+language model inference. The high-level workflow and component interactions are explained below.
+
+\subsection{RAG Workflow}
+The overall workflow of the Retrieval-Augmented Generation (RAG) pipeline
+used in our chatbot is illustrated in Figure~\ref{fig:rag_flow}.
+It highlights the process of document ingestion, text splitting, embedding,
+vector storage, and retrieval for contextual response generation.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{flow_1.png}
+    \caption{Retrieval-Augmented Generation (RAG) pipeline used in CyberSecBot.}
+    \label{fig:rag_flow}
+\end{figure}
+
+\subsection{System Flow Diagram}
+The complete end-to-end data flow of the chatbot, from user interaction
+to response generation, is shown in Figure~\ref{fig:system_flow}.
+This diagram illustrates the communication between the frontend,
+backend, vector database, and large language model components.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\linewidth]{flow_2.png}
+    \caption{Overall CyberSecBot system architecture showing the flow between components.}
+    \label{fig:system_flow}
+\end{figure}
+
+The system consists of five major components:
+
+\subsection{Frontend (React.js)}
+A lightweight user interface built with React for interactive chatting.
+It supports conversation history and can be extended for file or document uploads.
+
+\subsection{Backend (Node.js + Express)}
+Provides RESTful endpoints for chat messages, document ingestion, and memory management.
+It acts as a bridge between the frontend, LangChain, and ChromaDB.
+
+\subsection{LLM Integration (Ollama + Llama3:8B)}
+The Ollama runtime hosts the Llama3:8B model locally, which processes queries and generates
+natural language responses without cloud dependency.
+
+\subsection{LangChain Framework}
+LangChain manages model orchestration, embedding generation, prompt templates, and
+conversation memory. It also handles retrieval from the vector database using the RAG pipeline.
+
+\subsection{ChromaDB (Vector Database)}
+ChromaDB stores the embedded representations of cybersecurity documents (.md or .txt files).
+It enables semantic search and context retrieval for user queries.
+
+\section{Methodology}
+
+\subsection{Data Preparation}
+The chatbot uses cybersecurity documents (mainly OWASP guides and challenge explanations) in Markdown or plain-text format. Each document corresponds to a specific vulnerability or topic (e.g., SQL Injection, XSS, CSRF).
+
+\begin{quote}
+\texttt{Title: SQL Injection}\\
+\texttt{Description: SQL injection occurs when untrusted input is concatenated into SQL queries...}\\
+\texttt{Mitigation: Use parameterized queries and input sanitization.}
+\end{quote}
+
+\subsection{Embedding and Storage}
+\begin{itemize}
+    \item \textbf{Embedding Model:} LangChain’s default embedding model (or local embedding if configured).
+    \item \textbf{Vector Store:} ChromaDB running inside Docker with persistent volume mapping for long-term storage.
+\end{itemize}
+
+\subsection{Query Flow}
+\begin{enumerate}
+    \item User enters a query on the frontend.
+    \item Backend sends it to LangChain’s pipeline.
+    \item LangChain retrieves semantically relevant documents from ChromaDB.
+    \item Context + query is fed into the Ollama-hosted Llama3:8B model.
+    \item Model generates a contextual and conversational response.
+    \item Response and query are stored in memory for continuity.
+\end{enumerate}
+
+\subsection{Conversation Memory}
+LangChain’s \texttt{ConversationBufferMemory} is integrated to maintain session-based context, allowing the chatbot to remember prior exchanges.
+
+\section{Implementation Details}
+
+\subsection{Backend Setup}
+Dependencies installed:
+\begin{quote}
+\texttt{npm install express @langchain/core @langchain/community @langchain/ollama chromadb}
+\end{quote}
+
+\subsection{Backend API Endpoints}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{3cm}|}
+\hline
+\textbf{Endpoint} & \textbf{Method} & \textbf{Description} \\
+\hline
+/api/chat & POST & Send a user query and get chatbot response \\
+\hline
+\end{tabular}
+\caption{Backend API Endpoints}
+\end{table}
+
+\subsection{ChromaDB Docker Configuration}
+\begin{quote}
+\begin{verbatim}
+docker run -d \
+  -p 8000:8000 \
+  -v ./chromadb_data:/chromadb/data \
+  chromadb/chroma:latest
+\end{verbatim}
+\end{quote}
+
+This ensures persistence of vectors between sessions.
+
+\subsection{LangChain + Ollama Integration}
+\begin{quote}
+\begin{verbatim}
+import { Ollama } from "@langchain/ollama";
+
+const model = new Ollama({
+    model: "llama3:8b",
+    baseUrl: "http://localhost:11434"
+});
+\end{verbatim}
+\end{quote}
+
+\section{Results and Discussion}
+CyberSecBot successfully responds to cybersecurity-related queries, including OWASP vulnerability explanations, threat classifications, and prevention techniques. The retrieval augmentation from ChromaDB enhances factual accuracy, while Llama3 ensures natural, conversational tone.
+
+\textbf{Sample Query:}
+\begin{quote}
+\texttt{What is Cross-Site Scripting (XSS) and how to prevent it?}
+\end{quote}
+
+\textbf{Response:}
+\begin{quote}
+Cross-Site Scripting (XSS) allows attackers to inject malicious JavaScript into webpages viewed by other users. It can be mitigated by escaping output, validating input, and using Content Security Policy (CSP).
+\end{quote}
+
+\section{Future Work}
+\begin{enumerate}
+    \item \textbf{Challenge Integration:} Connect chatbot responses with practical CTF challenges.
+    \item \textbf{Document Upload:} Allow admins to upload new materials from the frontend.
+    \item \textbf{User Authentication:} Add user accounts and training progress tracking.
+    \item \textbf{Multi-agent Setup:} Introduce specialized agents for different cybersecurity domains.
+    \item \textbf{Deployment:} Containerize the backend and frontend using Docker Compose.
+\end{enumerate}
+
+\section{Conclusion}
+CyberSecBot demonstrates the potential of locally hosted, privacy-preserving AI systems for domain-specific education. Using LangChain and Ollama’s open models, it enables dynamic interaction with cybersecurity materials, bridging the gap between theory and practical training.
+
+% \section*{References}
+\begin{thebibliography}{00}
+\bibitem{b1} OWASP Foundation. \emph{OWASP Top 10 - 2023}. [Online] Available: \url{https://owasp.org}
+\bibitem{b2} LangChain Documentation. \url{https://js.langchain.com/}
+\bibitem{b3} Ollama. \url{https://ollama.ai}
+\bibitem{b4} ChromaDB. \url{https://docs.trychroma.com/}
+\bibitem{b5} Meta AI, \emph{LLaMA 3 Model Card}, 2024.
+\end{thebibliography}
+
+\end{document}
